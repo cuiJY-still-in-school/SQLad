@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -18,11 +21,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --bundles msi
+          args: --bundles nsis
       - uses: actions/upload-artifact@v4
         with:
-          name: SQLad-Windows-msi
-          path: src-tauri/target/release/bundle/msi/*.msi
+          name: SQLad-Windows-exe
+          path: src-tauri/target/release/bundle/nsis/*.exe
 
   macos:
     runs-on: macos-latest
@@ -36,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --bundles dmg
+          args: --bundles dmg --target universal-apple-darwin
       - uses: actions/upload-artifact@v4
         with:
           name: SQLad-macOS-dmg
@@ -60,3 +63,24 @@ jobs:
         with:
           name: SQLad-Linux-deb
           path: src-tauri/target/release/bundle/deb/*.deb
+
+  release:
+    needs: [windows, macos, linux]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - run: |
+          mkdir release
+          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.deb" \) -exec cp {} release/ \;
+          ls -lh release/
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "SQLad v0.1.${{ github.run_number }}"
+          files: release/*
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
