@@ -74,7 +74,9 @@ jobs:
           path: artifacts
       - run: |
           mkdir release
-          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.deb" \) -exec cp {} release/ \;
+          find artifacts -type f -name "*.exe" -exec cp {} release/sqlad-windows.exe \;
+          find artifacts -type f -name "*.dmg" -exec cp {} release/sqlad-macos.dmg \;
+          find artifacts -type f -name "*.deb" -exec cp {} release/sqlad-linux.deb \;
           ls -lh release/
       - uses: softprops/action-gh-release@v2
         with:

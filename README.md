@@ -4,13 +4,15 @@
 
 ## 下载
 
+## 下载
+
 | 平台 | 下载 |
 |---|---|
-| 🪟 Windows | [sqlad.exe](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad.exe) |
-| 🍎 macOS | [sqlad.dmg](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad.dmg) |
-| 🐧 Linux | [sqlad.deb](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad.deb) |
+| 🪟 Windows | [sqlad-windows.exe](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad-windows.exe) |
+| 🍎 macOS | [sqlad-macos.dmg](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad-macos.dmg) |
+| 🐧 Linux | [sqlad-linux.deb](https://github.com/cuiJY-still-in-school/SQLad/releases/latest/download/sqlad-linux.deb) |
 
-> 发布页找最新版：https://github.com/cuiJY-still-in-school/SQLad/releases
+> 发布页：https://github.com/cuiJY-still-in-school/SQLad/releases
 
 ## 怎么用
 
