@@ -26,7 +26,6 @@ import type {
   ToolCall,
   ToolSpec,
 } from "../api/types";
-import { ResultTable } from "./ResultTable";
 
 function isQueryResult(
   v: unknown
@@ -527,141 +526,21 @@ export function ChatPanel({
 }
 
 
-function summarizeToolResult(parsed: unknown): { label: string; severity: "ok" | "err" } | null {
-  if (!parsed || typeof parsed !== "object") return null;
-  const o = parsed as Record<string, unknown>;
-  if (typeof o.error === "string") {
-    return { label: `失败：${o.error}`, severity: "err" };
-  }
-  // create_table → { ok, table, columns }
-  if (o.ok && typeof o.table === "string" && typeof o.columns === "number") {
-    return { label: `已建表 ${o.table}（${o.columns} 列）`, severity: "ok" };
-  }
-  // insert_rows → { ok, inserted, table }
-  if (o.ok && typeof o.inserted === "number" && typeof o.table === "string") {
-    return { label: `已插入 ${o.inserted} 行到 ${o.table}`, severity: "ok" };
-  }
-  // set_view / save_view / switch_view / delete_view
-  if (o.ok && typeof o.view === "string") {
-    return { label: `已更新视图：${o.view}`, severity: "ok" };
-  }
-  if (o.ok === true && Object.keys(o).length <= 2) {
-    return { label: "已完成", severity: "ok" };
-  }
-  // list_tables → array
-  if (Array.isArray(parsed)) {
-    const arr = parsed as unknown[];
-    if (arr.length === 0) return { label: "（无）", severity: "ok" };
-    // list_views from frontend tool
-    if (
-      arr.every(
-        (x) =>
-          typeof x === "object" &&
-          x &&
-          typeof (x as Record<string, unknown>).name === "string"
-      )
-    ) {
-      const names = (arr as Array<{ name: string }>).map((x) => x.name).join(" · ");
-      return { label: `视图：${names}`, severity: "ok" };
-    }
-  }
-  return null;
-}
-
 function MessageBubble({ msg, compact, highlight }: { msg: ChatMessage; compact: boolean; highlight?: boolean }) {
   if (msg.role === "tool") {
-    let parsed: unknown = null;
+    let label: string = "";
     try {
-      parsed = JSON.parse(msg.content);
-    } catch {
-      parsed = msg.content;
-    }
-    const summary = isQueryResult(parsed) ? null : summarizeToolResult(parsed);
+      const p = JSON.parse(msg.content);
+      if (isQueryResult(p)) label = `查到了 ${p.row_count} 条`;
+      else if (p?.error) label = `出错了：${String(p.error).slice(0, 40)}`;
+      else if (p?.ok) label = p.table ? `好了，${String(p.table)} 表已更新` : "好了";
+      else if (Array.isArray(p)) label = `好了，${p.length} 条`;
+      else label = "好了";
+    } catch { label = "好了"; }
     return (
-      <Box sx={{ mt: 1.2 }}>
-        {isQueryResult(parsed) ? (
-          <>
-            <Typography variant="caption" color="text.secondary">
-              查询结果 · {parsed.row_count} 行
-            </Typography>
-            <Paper
-              variant="outlined"
-              sx={{
-                mt: 0.4,
-                p: 1.2,
-                bgcolor: (t) =>
-                  t.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.02)"
-                    : "rgba(0,0,0,0.02)",
-              }}
-            >
-              <ResultTable result={parsed} />
-            </Paper>
-          </>
-        ) : summary ? (
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={0.8}
-            sx={{
-              px: 1.2,
-              py: 0.6,
-              borderRadius: 1.5,
-              border: 1,
-              borderColor:
-                summary.severity === "ok" ? "success.main" : "error.main",
-              color: summary.severity === "ok" ? "success.main" : "error.main",
-              bgcolor: (t) =>
-                summary.severity === "ok"
-                  ? t.palette.mode === "dark"
-                    ? "rgba(16,185,129,0.08)"
-                    : "rgba(16,185,129,0.06)"
-                  : t.palette.mode === "dark"
-                    ? "rgba(239,68,68,0.10)"
-                    : "rgba(239,68,68,0.07)",
-              fontSize: 12.5,
-            }}
-          >
-            <Box sx={{ fontWeight: 600 }}>
-              {summary.severity === "ok" ? "✓" : "✗"}
-            </Box>
-            <Box sx={{ flex: 1 }}>{summary.label}</Box>
-          </Stack>
-        ) : (
-          <>
-            <Typography variant="caption" color="text.secondary">
-              工具结果
-            </Typography>
-            <Paper
-              variant="outlined"
-              sx={{
-                mt: 0.4,
-                p: 1.2,
-                bgcolor: (t) =>
-                  t.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.02)"
-                    : "rgba(0,0,0,0.02)",
-              }}
-            >
-              <Box
-                component="pre"
-                sx={{
-                  m: 0,
-                  fontFamily: "ui-monospace, monospace",
-                  fontSize: 11.5,
-                  maxHeight: 160,
-                  overflow: "auto",
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {typeof parsed === "string"
-                  ? parsed
-                  : JSON.stringify(parsed, null, 2)}
-              </Box>
-            </Paper>
-          </>
-        )}
-      </Box>
+      <Typography variant="caption" color="text.disabled" sx={{ mt: 0.6, display: "block", fontStyle: "italic" }}>
+        {label}
+      </Typography>
     );
   }
 
