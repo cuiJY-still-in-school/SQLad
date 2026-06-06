@@ -15,28 +15,48 @@ jobs:
       - run: bun install
       - run: bun run build
       - uses: tauri-apps/tauri-action@v0
-        with: { args: --target x86_64-pc-windows-msvc }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles msi
       - uses: actions/upload-artifact@v4
         with:
-          name: SQLad-windows
+          name: SQLad-Windows-msi
           path: src-tauri/target/release/bundle/msi/*.msi
 
-  linux:
-    runs-on: ubuntu-latest
+  macos:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt update && sudo apt install -y libwebkit2gtk-4.1-dev libxdo-dev
       - uses: oven-sh/setup-bun@v1
         with: { bun-version: latest }
       - run: bun install
       - run: bun run build
       - uses: tauri-apps/tauri-action@v0
-        with: { args: --target x86_64-unknown-linux-gnu }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles dmg
       - uses: actions/upload-artifact@v4
         with:
-          name: SQLad-linux
-          path: src-tauri/target/release/bundle/appimage/*.AppImage
+          name: SQLad-macOS-dmg
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt update && sudo apt install -y libwebkit2gtk-4.1-dev libxdo-dev libfuse2
+      - uses: oven-sh/setup-bun@v1
+        with: { bun-version: latest }
+      - run: bun install
+      - run: bun run build
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SQLad-Linux-deb
+          path: src-tauri/target/release/bundle/deb/*.deb
